@@ -9,12 +9,15 @@ class TodoProvider extends ChangeNotifier {
   final _uuid = const Uuid();
 
   List<TaskModel> get tasks => _tasks;
-  
-  List<TaskModel> get incompleteTasks => 
-      _tasks.where((task) => !task.isCompleted).toList();
-      
-  List<TaskModel> get completedTasks => 
-      _tasks.where((task) => task.isCompleted).toList();
+
+  List<TaskModel> get incompleteOnlyTasks =>
+      _tasks.where((task) => task.status == TaskStatus.incomplete).toList();
+
+  List<TaskModel> get inProgressTasks =>
+      _tasks.where((task) => task.status == TaskStatus.inProgress).toList();
+
+  List<TaskModel> get completedTasks =>
+      _tasks.where((task) => task.status == TaskStatus.complete).toList();
 
   TodoProvider() {
     _loadTasks();
@@ -23,9 +26,10 @@ class TodoProvider extends ChangeNotifier {
   Future<void> _loadTasks() async {
     final prefs = await SharedPreferences.getInstance();
     final tasksJson = prefs.getStringList(_tasksKey);
-    
+
     if (tasksJson != null) {
       _tasks = tasksJson.map((jsonStr) => TaskModel.fromJson(jsonStr)).toList();
+      _sortTasks(); // Sort after loading
       notifyListeners();
     }
   }
@@ -36,27 +40,30 @@ class TodoProvider extends ChangeNotifier {
     await prefs.setStringList(_tasksKey, tasksJson);
   }
 
-  void addTask(String title, DateTime dueDate) {
+  void addTask(
+    String title,
+    DateTime dueDate, {
+    TaskStatus status = TaskStatus.incomplete,
+  }) {
     if (title.isEmpty) return;
-    
+
     final newTask = TaskModel(
       id: _uuid.v4(),
       title: title,
       dueDate: dueDate,
+      status: status,
     );
-    
+
     _tasks.add(newTask);
     _sortTasks();
     _saveTasks();
     notifyListeners();
   }
 
-  void toggleTaskStatus(String id) {
+  void updateTaskStatus(String id, TaskStatus newStatus) {
     final index = _tasks.indexWhere((task) => task.id == id);
     if (index != -1) {
-      _tasks[index] = _tasks[index].copyWith(
-        isCompleted: !_tasks[index].isCompleted
-      );
+      _tasks[index] = _tasks[index].copyWith(status: newStatus);
       _sortTasks();
       _saveTasks();
       notifyListeners();
@@ -68,14 +75,31 @@ class TodoProvider extends ChangeNotifier {
     _saveTasks();
     notifyListeners();
   }
-  
+
   void _sortTasks() {
-    // Sort tasks: incomplete first, then by due date
+    // Sort tasks: In Progress first, then Incomplete, then Complete
+    // Within each status, sort by due date
     _tasks.sort((a, b) {
-      if (a.isCompleted == b.isCompleted) {
+      if (a.status == b.status) {
         return a.dueDate.compareTo(b.dueDate);
       }
-      return a.isCompleted ? 1 : -1;
+
+      // Status priority: inProgress (0) < incomplete (1) < complete (2)
+      final priorityA = _getStatusPriority(a.status);
+      final priorityB = _getStatusPriority(b.status);
+
+      return priorityA.compareTo(priorityB);
     });
+  }
+
+  int _getStatusPriority(TaskStatus status) {
+    switch (status) {
+      case TaskStatus.inProgress:
+        return 0;
+      case TaskStatus.incomplete:
+        return 1;
+      case TaskStatus.complete:
+        return 2;
+    }
   }
 }

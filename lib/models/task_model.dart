@@ -1,29 +1,40 @@
 import 'dart:convert';
 
+enum TaskStatus {
+  incomplete,
+  inProgress,
+  complete;
+
+  String toJson() => name;
+  factory TaskStatus.fromJson(String json) => TaskStatus.values.byName(json);
+}
+
 class TaskModel {
   final String id;
   final String title;
   final DateTime dueDate;
-  final bool isCompleted;
+  final TaskStatus status;
 
   TaskModel({
     required this.id,
     required this.title,
     required this.dueDate,
-    this.isCompleted = false,
+    this.status = TaskStatus.incomplete,
   });
+
+  bool get isCompleted => status == TaskStatus.complete;
 
   TaskModel copyWith({
     String? id,
     String? title,
     DateTime? dueDate,
-    bool? isCompleted,
+    TaskStatus? status,
   }) {
     return TaskModel(
       id: id ?? this.id,
       title: title ?? this.title,
       dueDate: dueDate ?? this.dueDate,
-      isCompleted: isCompleted ?? this.isCompleted,
+      status: status ?? this.status,
     );
   }
 
@@ -32,7 +43,7 @@ class TaskModel {
       'id': id,
       'title': title,
       'dueDate': dueDate.millisecondsSinceEpoch,
-      'isCompleted': isCompleted,
+      'status': status.toJson(),
     };
   }
 
@@ -41,11 +52,16 @@ class TaskModel {
       id: map['id'] ?? '',
       title: map['title'] ?? '',
       dueDate: DateTime.fromMillisecondsSinceEpoch(map['dueDate'] ?? 0),
-      isCompleted: map['isCompleted'] ?? false,
+      status: map['status'] != null
+          ? TaskStatus.fromJson(map['status'])
+          : (map['isCompleted'] == true
+                ? TaskStatus.complete
+                : TaskStatus.incomplete),
     );
   }
 
   String toJson() => json.encode(toMap());
 
-  factory TaskModel.fromJson(String source) => TaskModel.fromMap(json.decode(source));
+  factory TaskModel.fromJson(String source) =>
+      TaskModel.fromMap(json.decode(source));
 }

@@ -13,16 +13,16 @@ class GradeCard extends StatelessWidget {
     required this.index,
   });
 
-  Color _getGradeColor(int score) {
-    if (score >= 90) return AppColors.gradeExcellent;
-    if (score >= 80) return AppColors.gradeGood;
-    if (score >= 70) return AppColors.gradeNeedsImprovement;
+  Color _getGradeColor(double decimalGrade) {
+    if (decimalGrade <= 1.5) return AppColors.gradeExcellent;
+    if (decimalGrade <= 2.0) return AppColors.gradeGood;
+    if (decimalGrade <= 3.0) return AppColors.gradeNeedsImprovement;
     return AppColors.gradePoor;
   }
 
   @override
   Widget build(BuildContext context) {
-    final color = _getGradeColor(grade.score);
+    final color = _getGradeColor(grade.decimalGrade);
 
     return Card(
       elevation: 2,
@@ -36,15 +36,15 @@ class GradeCard extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              height: 50,
-              width: 50,
+              height: 60,
+              width: 60,
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(
                 child: Text(
-                  grade.score.toString(),
+                  grade.decimalGrade.toStringAsFixed(2),
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: color,
                         fontWeight: FontWeight.bold,
@@ -62,27 +62,38 @@ class GradeCard extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      grade.status,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: color,
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: color.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          grade.status,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: color,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${grade.units} Units • ${grade.score}%',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: AppColors.textDisabled),
           ],
         ),
       ),
     ).animate().fadeIn(delay: (100 * index).ms).slideX(begin: 0.1, end: 0);
   }
 }
+

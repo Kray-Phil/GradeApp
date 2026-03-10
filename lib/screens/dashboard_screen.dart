@@ -46,7 +46,7 @@ class DashboardScreen extends StatelessWidget {
                     child: Text(
                       student?.name.substring(0, 1).toUpperCase() ?? 'S',
                       style: const TextStyle(
-                        fontSize: 24, 
+                        fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -62,9 +62,9 @@ class DashboardScreen extends StatelessWidget {
                 'Quick Overview',
                 style: Theme.of(context).textTheme.titleLarge,
               ).animate().fadeIn(delay: 100.ms),
-              
+
               const SizedBox(height: 16),
-              
+
               Row(
                 children: [
                   Expanded(
@@ -73,8 +73,8 @@ class DashboardScreen extends StatelessWidget {
                       icon: Icons.analytics_outlined,
                       color: AppColors.primary,
                       onTap: () {
-                        // Uses Bottom Nav in main.dart if setup that way, 
-                        // or pushing manual routes here. For this structure, 
+                        // Uses Bottom Nav in main.dart if setup that way,
+                        // or pushing manual routes here. For this structure,
                         // we'll assume navigation is handled via pushing or a root indexed stack.
                       },
                     ).animate().scale(delay: 200.ms),
@@ -97,25 +97,29 @@ class DashboardScreen extends StatelessWidget {
                 "Today's Progress",
                 style: Theme.of(context).textTheme.titleLarge,
               ).animate().fadeIn(delay: 400.ms),
-              
+
               const SizedBox(height: 16),
 
               Consumer<TodoProvider>(
                 builder: (context, todoProv, _) {
                   final totalTasks = todoProv.tasks.length;
-                  final completedTasks = todoProv.completedTasks.length;
-                  final progress = totalTasks == 0 ? 0.0 : completedTasks / totalTasks;
+                  final completedCount = todoProv.completedTasks.length;
+                  final inProgressCount = todoProv.inProgressTasks.length;
+                  final incompleteCount = todoProv.incompleteOnlyTasks.length;
+                  final progress = totalTasks == 0
+                      ? 0.0
+                      : completedCount / totalTasks;
 
                   return Container(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.textDisabled.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
+                          color: AppColors.textDisabled.withOpacity(0.05),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
                         ),
                       ],
                     ),
@@ -126,27 +130,65 @@ class DashboardScreen extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Task Completion',
-                              style: Theme.of(context).textTheme.titleMedium,
+                              'Task Progress',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
-                            Text(
-                              '$completedTasks/$totalTasks',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.bold,
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                '${(progress * 100).toInt()}% Done',
+                                style: Theme.of(context).textTheme.labelMedium
+                                    ?.copyWith(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 20),
                         ClipRRect(
                           borderRadius: BorderRadius.circular(10),
                           child: LinearProgressIndicator(
                             value: progress,
-                            minHeight: 12,
+                            minHeight: 10,
                             backgroundColor: AppColors.surfaceVariant,
-                            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                              AppColors.primary,
+                            ),
                           ),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _StatusItem(
+                              label: 'Incomplete',
+                              count: incompleteCount,
+                              color: AppColors.textDisabled,
+                              icon: Icons.radio_button_unchecked_rounded,
+                            ),
+                            _StatusItem(
+                              label: 'In Progress',
+                              count: inProgressCount,
+                              color: AppColors.warning,
+                              icon: Icons.rotate_right_rounded,
+                            ),
+                            _StatusItem(
+                              label: 'Completed',
+                              count: completedCount,
+                              color: AppColors.success,
+                              icon: Icons.check_circle_rounded,
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -157,6 +199,51 @@ class DashboardScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _StatusItem extends StatelessWidget {
+  final String label;
+  final int count;
+  final Color color;
+  final IconData icon;
+
+  const _StatusItem({
+    required this.label,
+    required this.count,
+    required this.color,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          '$count',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: AppColors.textSecondary,
+            fontSize: 10,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -183,10 +270,7 @@ class _DashboardCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 1.5,
-          ),
+          border: Border.all(color: color.withOpacity(0.3), width: 1.5),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,11 +281,7 @@ class _DashboardCard extends StatelessWidget {
                 color: color,
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: 28,
-              ),
+              child: Icon(icon, color: Colors.white, size: 28),
             ),
             const SizedBox(height: 20),
             Text(
