@@ -1,27 +1,39 @@
 class Grade {
-  final String subject;
+  final String code;
+  final String subject; // This will act as the "Description" or "Name"
   final int score;
   final double units;
+  final int semester;
+  final String academicYear;
 
   Grade({
+    required this.code,
     required this.subject,
     required this.score,
-    this.units = 3.0,
+    required this.units,
+    required this.semester,
+    required this.academicYear,
   });
 
   factory Grade.fromJson(Map<String, dynamic> json) {
     return Grade(
+      code: json['code'] ?? '',
       subject: json['subject'] ?? '',
       score: json['grade'] ?? 0,
       units: (json['units'] ?? 3.0).toDouble(),
+      semester: json['semester'] ?? 1,
+      academicYear: json['academic_year'] ?? '',
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      'code': code,
       'subject': subject,
       'grade': score,
       'units': units,
+      'semester': semester,
+      'academic_year': academicYear,
     };
   }
 

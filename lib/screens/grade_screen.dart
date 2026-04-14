@@ -4,7 +4,6 @@ import 'package:banzon_gradeapp/providers/auth_provider.dart';
 import 'package:banzon_gradeapp/providers/grade_provider.dart';
 import 'package:banzon_gradeapp/models/grade.dart';
 import 'package:banzon_gradeapp/core/constants/app_colors.dart';
-import 'package:banzon_gradeapp/widgets/grade_card.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 class GradeScreen extends StatefulWidget {
@@ -40,12 +39,27 @@ class _GradeScreenState extends State<GradeScreen> {
     return totalUnits > 0 ? totalWeightedGrades / totalUnits : 0.0;
   }
 
+  Map<String, List<Grade>> _groupGrades(List<Grade> grades) {
+    final Map<String, List<Grade>> grouped = {};
+    for (var g in grades) {
+      final key = "${g.academicYear} | ${g.semester == 1 ? '1st' : g.semester == 2 ? '2nd' : '${g.semester}th'} Semester";
+      if (!grouped.containsKey(key)) {
+        grouped[key] = [];
+      }
+      grouped[key]!.add(g);
+    }
+    return grouped;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('My Grades'),
+        title: const Text('College Grading System'),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        foregroundColor: AppColors.textPrimary,
       ),
       body: Consumer<GradeProvider>(
         builder: (context, gradeProv, _) {
@@ -77,34 +91,32 @@ class _GradeScreenState extends State<GradeScreen> {
 
           if (gradeProv.grades.isEmpty) {
             return const Center(
-              child: Text("No records found."),
+              child: Text("No academic records found."),
             );
           }
 
-          final gwa = _calculateGWA(gradeProv.grades);
+          final totalGwa = _calculateGWA(gradeProv.grades);
+          final groupedGrades = _groupGrades(gradeProv.grades);
 
           return RefreshIndicator(
             onRefresh: _fetchGrades,
             color: AppColors.primary,
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                _buildGWACard(gwa),
-                const SizedBox(height: 24),
-                Text(
-                  'Subject Grades',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textSecondary,
-                      ),
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: _buildCumulativeGWACard(totalGwa),
+                  ),
                 ),
-                const SizedBox(height: 12),
-                ...gradeProv.grades.asMap().entries.map((entry) {
-                  return GradeCard(
-                    grade: entry.value,
-                    index: entry.key,
+                ...groupedGrades.entries.map((entry) {
+                  final semesterGwa = _calculateGWA(entry.value);
+                  return SliverToBoxAdapter(
+                    child: _buildSemesterSection(entry.key, entry.value, semesterGwa),
                   );
                 }),
+                const SliverToBoxAdapter(child: SizedBox(height: 32)),
               ],
             ),
           );
@@ -113,68 +125,204 @@ class _GradeScreenState extends State<GradeScreen> {
     );
   }
 
-  Widget _buildGWACard(double gwa) {
+  Widget _buildCumulativeGWACard(double gwa) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primaryDark],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
+            color: AppColors.primary.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
-      child: Column(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            'General Weighted Average',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Cumulative GWA',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                gwa.toStringAsFixed(4),
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            gwa.toStringAsFixed(2),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 48,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white24,
-              borderRadius: BorderRadius.circular(20),
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
               _getGWAStatus(gwa),
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: AppColors.primary,
                 fontWeight: FontWeight.bold,
+                fontSize: 12,
               ),
             ),
           ),
         ],
       ),
-    ).animate().fadeIn().scale(delay: 200.ms);
+    ).animate().fadeIn().slideY(begin: 0.2, end: 0);
+  }
+
+  Widget _buildSemesterSection(String title, List<Grade> grades, double semesterGwa) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title.toUpperCase(),
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              Text(
+                'GPA: ${semesterGwa.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.black12.withOpacity(0.05)),
+            ),
+            child: Column(
+              children: [
+                _buildTableHeader(),
+                const Divider(height: 1, color: Colors.black12),
+                ...grades.asMap().entries.map((entry) {
+                  return _buildGradeRow(entry.value, entry.key == grades.length - 1);
+                }),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0);
+  }
+
+  Widget _buildTableHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      child: Row(
+        children: const [
+          Expanded(flex: 2, child: Text('CODE', style: _headerStyle)),
+          Expanded(flex: 4, child: Text('DESCRIPTION', style: _headerStyle)),
+          Expanded(flex: 1, child: Text('UNITS', style: _headerStyle, textAlign: TextAlign.center)),
+          Expanded(flex: 1, child: Text('GRADE', style: _headerStyle, textAlign: TextAlign.center)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGradeRow(Grade grade, bool isLast) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+          child: Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: Text(
+                  grade.code,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+              ),
+              Expanded(
+                flex: 4,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      grade.subject,
+                      style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 1,
+                child: Text(
+                  grade.units.toStringAsFixed(1),
+                  style: const TextStyle(fontSize: 13),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              Expanded(
+                flex: 1,
+                child: Text(
+                  grade.decimalGrade.toStringAsFixed(2),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: _getGradeColor(grade.decimalGrade),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (!isLast) const Divider(height: 1, indent: 16, endIndent: 16, color: Colors.black12),
+      ],
+    );
+  }
+
+  static const _headerStyle = TextStyle(
+    fontSize: 10,
+    fontWeight: FontWeight.bold,
+    color: AppColors.textDisabled,
+    letterSpacing: 0.5,
+  );
+
+  Color _getGradeColor(double decimalGrade) {
+    if (decimalGrade <= 1.5) return AppColors.gradeExcellent;
+    if (decimalGrade <= 2.0) return AppColors.gradeGood;
+    if (decimalGrade <= 3.0) return AppColors.gradeNeedsImprovement;
+    return AppColors.gradePoor;
   }
 
   String _getGWAStatus(double gwa) {
-    if (gwa <= 1.25) return 'Presidents Lister';
-    if (gwa <= 1.5) return 'Deans Lister';
-    if (gwa <= 3.0) return 'Academic Standing: Good';
-    return 'Academic Standing: Failing';
+    if (gwa <= 1.25) return 'PRESIDENT\'S LISTER';
+    if (gwa <= 1.5) return 'DEAN\'S LISTER';
+    if (gwa <= 3.0) return 'GOOD STANDING';
+    return 'SCHOLASTIC PROBATION';
   }
 }
 

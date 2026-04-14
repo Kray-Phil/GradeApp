@@ -5,16 +5,16 @@ void main() {
   group('Grade Model Logic Tests', () {
     test('should map numeric scores to correct decimal grades', () {
       final grades = [
-        Grade(subject: 'Math', score: 98),   // 1.0
-        Grade(subject: 'Science', score: 95),// 1.25
-        Grade(subject: 'History', score: 92),// 1.5
-        Grade(subject: 'English', score: 89),// 1.75
-        Grade(subject: 'PE', score: 86),     // 2.0
-        Grade(subject: 'Art', score: 84),    // 2.25
-        Grade(subject: 'CS', score: 81),     // 2.5
-        Grade(subject: 'Music', score: 78),  // 2.75
-        Grade(subject: 'Ethics', score: 76), // 3.0
-        Grade(subject: 'Physics', score: 70),// 5.0
+        Grade(code: 'M1', subject: 'Math', score: 98, units: 3.0, semester: 1, academicYear: '2024'),
+        Grade(code: 'S1', subject: 'Science', score: 95, units: 3.0, semester: 1, academicYear: '2024'),
+        Grade(code: 'H1', subject: 'History', score: 92, units: 3.0, semester: 1, academicYear: '2024'),
+        Grade(code: 'E1', subject: 'English', score: 89, units: 3.0, semester: 1, academicYear: '2024'),
+        Grade(code: 'P1', subject: 'PE', score: 86, units: 2.0, semester: 1, academicYear: '2024'),
+        Grade(code: 'A1', subject: 'Art', score: 84, units: 3.0, semester: 1, academicYear: '2024'),
+        Grade(code: 'C1', subject: 'CS', score: 81, units: 3.0, semester: 1, academicYear: '2024'),
+        Grade(code: 'M2', subject: 'Music', score: 78, units: 3.0, semester: 1, academicYear: '2024'),
+        Grade(code: 'E2', subject: 'Ethics', score: 76, units: 3.0, semester: 1, academicYear: '2024'),
+        Grade(code: 'P2', subject: 'Physics', score: 70, units: 3.0, semester: 1, academicYear: '2024'),
       ];
 
       expect(grades[0].decimalGrade, 1.0);
@@ -30,19 +30,19 @@ void main() {
     });
 
     test('should return correct status for decimal grades', () {
-      expect(Grade(subject: 'S1', score: 98).status, 'Excellent');
-      expect(Grade(subject: 'S2', score: 92).status, 'Very Good');
-      expect(Grade(subject: 'S3', score: 86).status, 'Good');
-      expect(Grade(subject: 'S4', score: 81).status, 'Satisfactory');
-      expect(Grade(subject: 'S5', score: 78).status, 'Fair');
-      expect(Grade(subject: 'S6', score: 76).status, 'Passing');
-      expect(Grade(subject: 'S7', score: 70).status, 'Failed');
+      expect(Grade(code: 'S1', subject: 'S1', score: 98, units: 3.0, semester: 1, academicYear: '2024').status, 'Excellent');
+      expect(Grade(code: 'S2', subject: 'S2', score: 92, units: 3.0, semester: 1, academicYear: '2024').status, 'Very Good');
+      expect(Grade(code: 'S3', subject: 'S3', score: 86, units: 3.0, semester: 1, academicYear: '2024').status, 'Good');
+      expect(Grade(code: 'S4', subject: 'S4', score: 81, units: 3.0, semester: 1, academicYear: '2024').status, 'Satisfactory');
+      expect(Grade(code: 'S5', subject: 'S5', score: 78, units: 3.0, semester: 1, academicYear: '2024').status, 'Fair');
+      expect(Grade(code: 'S6', subject: 'S6', score: 76, units: 3.0, semester: 1, academicYear: '2024').status, 'Passing');
+      expect(Grade(code: 'S7', subject: 'S7', score: 70, units: 3.0, semester: 1, academicYear: '2024').status, 'Failed');
     });
 
     test('should calculate correct GWA with different units', () {
       final grades = [
-        Grade(subject: 'Math', score: 95, units: 3.0),   // 1.25 * 3 = 3.75
-        Grade(subject: 'Science', score: 80, units: 5.0),// 2.5 * 5 = 12.5
+        Grade(code: 'M1', subject: 'Math', score: 95, units: 3.0, semester: 1, academicYear: '2024'),   // 1.25 * 3 = 3.75
+        Grade(code: 'S1', subject: 'Science', score: 80, units: 5.0, semester: 1, academicYear: '2024'),// 2.5 * 5 = 12.5
       ];
       
       // Total units = 8.0

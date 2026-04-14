@@ -32,16 +32,25 @@ class ApiService {
   Future<Map<String, dynamic>> fetchGrades(String studentId) async {
     await Future.delayed(_delay);
     
-    // Simulate API JSON response
+    // Simulate API JSON response with professional college grading system data
     final mockResponse = {
       "student": "John Doe",
       "grades": [
-        { "subject": "Mathematics", "grade": 92 },
-        { "subject": "Science", "grade": 88 },
-        { "subject": "English", "grade": 91 },
-        { "subject": "History", "grade": 75 },
-        { "subject": "Physical Education", "grade": 100 },
-        { "subject": "Programming", "grade": 65 }, // Test poor grade
+        // 1st Year, 1st Semester
+        { "code": "ENG 101", "subject": "Speech and Oral Communication", "grade": 92, "units": 3.0, "semester": 1, "academic_year": "2024-2025" },
+        { "code": "MATH 101", "subject": "College Algebra", "grade": 88, "units": 3.0, "semester": 1, "academic_year": "2024-2025" },
+        { "code": "CS 101", "subject": "Introduction to Computing", "grade": 91, "units": 3.0, "semester": 1, "academic_year": "2024-2025" },
+        { "code": "HIST 101", "subject": "Readings in Philippine History", "grade": 75, "units": 3.0, "semester": 1, "academic_year": "2024-2025" },
+        { "code": "PE 101", "subject": "Physical Fitness", "grade": 100, "units": 2.0, "semester": 1, "academic_year": "2024-2025" },
+        { "code": "PROG 101", "subject": "Programming Fundamentals 1", "grade": 85, "units": 3.0, "semester": 1, "academic_year": "2024-2025" },
+        
+        // 1st Year, 2nd Semester
+        { "code": "ENG 102", "subject": "Purposive Communication", "grade": 94, "units": 3.0, "semester": 2, "academic_year": "2024-2025" },
+        { "code": "MATH 102", "subject": "Trigonometry", "grade": 85, "units": 3.0, "semester": 2, "academic_year": "2024-2025" },
+        { "code": "CS 102", "subject": "Computer Programming 2", "grade": 93, "units": 3.0, "semester": 2, "academic_year": "2024-2025" },
+        { "code": "SOC 101", "subject": "Contemporary World", "grade": 82, "units": 3.0, "semester": 2, "academic_year": "2024-2025" },
+        { "code": "PE 102", "subject": "Rhythmic Activities", "grade": 98, "units": 2.0, "semester": 2, "academic_year": "2024-2025" },
+        { "code": "NSTP 1", "subject": "CWTS 1", "grade": 95, "units": 3.0, "semester": 2, "academic_year": "2024-2025" },
       ]
     };
     
